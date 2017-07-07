@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="binge_key">AsnfTegFbPBgon4lBWIIYl6Q3AeqQuSLGN7DB6BuOuHbd5BV03a_03_AhKUBo9Qx</string>
+    <string name="google_maps_geocoding_key">AIzaSyBJd5Sfdul4UUlWmrTrGOwQb1L2zR33Zcs</string>
+    <string name="google_maps_places_autocomplete_key">AIzaSyCVyJQPZ-i7kr00CIN39UCezjbeOPS3N4w</string>
+</resources>
