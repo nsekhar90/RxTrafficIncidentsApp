@@ -34,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
     private LocationAddress sourceAddress;
     private LocationAddress destinationAddress;
 
+    private Button getTrafficInfoButton;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -44,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
 
         AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.source_location);
         AutoCompleteTextView destination = (AutoCompleteTextView) findViewById(R.id.destination_location);
-        Button getTrafficInfoButton = (Button) findViewById(R.id.my_button);
+        getTrafficInfoButton = (Button) findViewById(R.id.my_button);
 
         rx.Observable<CharSequence> sourceLocationObservable = RxTextView.textChanges(source);
         rx.Observable<CharSequence> destinationLocationObservable = RxTextView.textChanges(destination);
@@ -89,11 +91,7 @@ public class MainActivity extends AppCompatActivity {
                             }, throwable -> Log.e("findMe", "exception while fetching results: " + throwable.getCause()));
                 });
 
-        rx.Observable.combineLatest(sourceLocationObservable, destinationLocationObservable, (charSequence, charSequence2) -> {
-            boolean sourceCheck = charSequence.toString().length() >= 5;
-            boolean destinationCheck = charSequence2.toString().length() >= 5;
-            return sourceCheck && destinationCheck;
-        }).subscribe(getTrafficInfoButton::setEnabled); //same as getTrafficInfoButton.setEnabled(boolean)
+        setUpButtonEnableLogic(sourceLocationObservable, destinationLocationObservable);
 
         RxView.clicks(getTrafficInfoButton)
 //                .skip(4)
@@ -104,6 +102,14 @@ public class MainActivity extends AppCompatActivity {
                     AppsListActivity.start(MainActivity.this);
                 });
 //        setUpTimer();
+    }
+
+    private void setUpButtonEnableLogic(rx.Observable<CharSequence> sourceLocationObservable, rx.Observable<CharSequence> destinationLocationObservable) {
+        rx.Observable.combineLatest(sourceLocationObservable, destinationLocationObservable, (charSequence, charSequence2) -> {
+            boolean sourceCheck = charSequence.toString().length() >= 5;
+            boolean destinationCheck = charSequence2.toString().length() >= 5;
+            return sourceCheck && destinationCheck;
+        }).subscribe(getTrafficInfoButton::setEnabled); //same as getTrafficInfoButton.setEnabled(boolean)
     }
 
     @Override
