@@ -1,6 +1,6 @@
 package com.example.sekharn.trafficincidents.network.api;
 
-import com.example.sekharn.trafficincidents.network.data.GeoCodingData;
+import com.example.sekharn.trafficincidents.network.data.geocode.GeoCodingData;
 
 import io.reactivex.Single;
 import retrofit2.http.GET;

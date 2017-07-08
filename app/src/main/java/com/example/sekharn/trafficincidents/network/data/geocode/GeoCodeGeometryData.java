@@ -1,4 +1,4 @@
-package com.example.sekharn.trafficincidents.network.data;
+package com.example.sekharn.trafficincidents.network.data.geocode;
 
 
 import com.google.gson.annotations.SerializedName;

@@ -65,8 +65,8 @@ public class MainActivity extends AppCompatActivity {
                 });
 
         rx.Observable.combineLatest(sourceLocationObservable, destinationLocationObservable, (charSequence, charSequence2) -> {
-            boolean sourceCheck = charSequence.toString().length() > 5;
-            boolean destinationCheck = charSequence2.toString().length() > 5;
+            boolean sourceCheck = charSequence.toString().length() >= 5;
+            boolean destinationCheck = charSequence2.toString().length() >= 5;
             return sourceCheck && destinationCheck;
         }).subscribe(getTrafficInfoButton::setEnabled); //same as getTrafficInfoButton.setEnabled(boolean)
 
