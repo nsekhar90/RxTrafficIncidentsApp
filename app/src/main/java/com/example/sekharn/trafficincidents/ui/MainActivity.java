@@ -39,12 +39,17 @@ public class MainActivity extends AppCompatActivity {
         googleGeoCodingApi = ((TrafficIndicentsApplication) getApplication()).getGeoCodingApi();
 
         AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.source_location);
+        AutoCompleteTextView destination = (AutoCompleteTextView) findViewById(R.id.destination_location);
+        Button getTrafficInfoButton = (Button) findViewById(R.id.my_button);
+
+        rx.Observable<CharSequence> sourceLocationObservable = RxTextView.textChanges(source);
+        rx.Observable<CharSequence> destinationLocationObservable = RxTextView.textChanges(destination);
 
         /*code to get lat, long of source address */
-        originLocationSubscription = RxTextView.textChanges(source)
+        originLocationSubscription = sourceLocationObservable
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .subscribe(charSequence -> {
-                     googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString())
+                    googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString())
                             .flatMap(autoCompletePredictionData -> {
                                 Log.e("findMe", "onNext in flatmap: " + autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
                                 return googleGeoCodingApi.getLatLong(autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
@@ -59,10 +64,13 @@ public class MainActivity extends AppCompatActivity {
                             }, throwable -> Log.e("findMe", "exception while fetching results: " + throwable.getCause()));
                 });
 
-//        setUpTimer();
+        rx.Observable.combineLatest(sourceLocationObservable, destinationLocationObservable, (charSequence, charSequence2) -> {
+            boolean sourceCheck = charSequence.toString().length() > 5;
+            boolean destinationCheck = charSequence2.toString().length() > 5;
+            return sourceCheck && destinationCheck;
+        }).subscribe(getTrafficInfoButton::setEnabled); //same as getTrafficInfoButton.setEnabled(boolean)
 
-        Button myButton = (Button) findViewById(R.id.my_button);
-        RxView.clicks(myButton)
+        RxView.clicks(getTrafficInfoButton)
 //                .skip(4)
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .observeOn(rx.android.schedulers.AndroidSchedulers.mainThread())
@@ -70,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(MainActivity.this, "Toast displayed after 500 ms", Toast.LENGTH_SHORT).show();
                     AppsListActivity.start(MainActivity.this);
                 });
+//        setUpTimer();
     }
 
     @Override
@@ -89,27 +98,27 @@ public class MainActivity extends AppCompatActivity {
                 .take(10) //Do 10 times and automatically stop
                 .map(aLong -> aLong * aLong);
 
-                timerObservable.subscribe(new Observer<Long>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
-
-                    }
-
-                    @Override
-                    public void onNext(Long aLong) {
-                        Log.e("findMe", "onNext of timer: " + aLong);
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-                });
+        timerObservable.subscribe(new Observer<Long>() {
+            @Override
+            public void onSubscribe(Disposable d) {
 
             }
+
+            @Override
+            public void onNext(Long aLong) {
+                Log.e("findMe", "onNext of timer: " + aLong);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        });
+
+    }
 }
