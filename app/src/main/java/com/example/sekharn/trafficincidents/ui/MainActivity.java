@@ -18,11 +18,11 @@ import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import rx.Subscription;
-import rx.functions.Action1;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -33,43 +33,23 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        final IGoogleAutoPlaceCompleteApi googleAutoPlaceCompleteApi =
-                ((TrafficIndicentsApplication) getApplication()).getGooglePlacesAutoCompleteApi();
+        IGoogleAutoPlaceCompleteApi googleAutoPlaceCompleteApi = ((TrafficIndicentsApplication) getApplication()).getGooglePlacesAutoCompleteApi();
+
         final EditText source = (EditText) findViewById(R.id.place_one);
         originLocationSubscription = RxTextView.textChanges(source)
                 .debounce(500, TimeUnit.MILLISECONDS)
-                .subscribe(new Action1<CharSequence>() {
-                    @Override
-                    public void call(CharSequence charSequence) {
-                        Log.e("findMe", "charSequence = " + charSequence);
-                        googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString(), getString(R.string.google_maps_places_autocomplete_key))
-                                .subscribeOn(Schedulers.io())
-                                .observeOn(AndroidSchedulers.mainThread())
-                                .subscribe(new Observer<PredictionData>() {
-                                    @Override
-                                    public void onSubscribe(Disposable d) {
-                                        Log.e("findMe", "onSubscribe ");
-                                    }
-
-                                    @Override
-                                    public void onNext(PredictionData predictionData) {
-                                        if (predictionData.getPredictionDataList().size() > 1) {
-                                            Log.e("findMe", "onNext: " + predictionData.getPredictionDataList().get(0).getDescription());
-                                        }
-                                    }
-
-                                    @Override
-                                    public void onError(Throwable e) {
-                                        Log.e("findMe", "onError: " + e.getMessage());
-                                    }
-
-                                    @Override
-                                    public void onComplete() {
-
-                                    }
-                                });
-
-                    }
+                .subscribe(charSequence -> {
+                    Log.e("findMe", "charSequence = " + charSequence);
+                    Single<PredictionData> sourceDataObservable = googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString());
+                    sourceDataObservable.subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(predictionData -> {
+                                if (predictionData.getPredictionDataList().size() > 1) {
+                                    Log.e("findMe", "onNext: " + predictionData.getPredictionDataList().get(0).getDescription());
+                                }
+                            }, throwable -> {
+                                    Log.e("findMe", "exception while fetching results");
+                            });
                 });
 
         setUpTimer();
