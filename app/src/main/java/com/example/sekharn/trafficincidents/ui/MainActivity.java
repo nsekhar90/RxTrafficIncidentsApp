@@ -20,7 +20,6 @@ import io.reactivex.Observable;
 import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import rx.Subscription;
 import rx.functions.Action1;
@@ -97,33 +96,29 @@ public class MainActivity extends AppCompatActivity {
     private void setUpTimer() {
         Observable<Long> timerObservable = Observable.interval(500, 400, TimeUnit.MILLISECONDS)
                 .take(10) //Do 10 times and automatically stop
-                .map(new Function<Long, Long>() {
+                .map(aLong -> aLong * aLong);
+
+                timerObservable.subscribe(new Observer<Long>() {
                     @Override
-                    public Long apply(Long aLong) throws Exception {
-                        return aLong * aLong;
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(Long aLong) {
+                        Log.e("findMe", "onNext of timer: " + aLong);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
                     }
                 });
-        timerObservable.subscribe(new Observer<Long>() {
-            @Override
-            public void onSubscribe(Disposable d) {
 
             }
-
-            @Override
-            public void onNext(Long aLong) {
-                Log.e("findMe", "onNext of timer: " + aLong);
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onComplete() {
-
-            }
-        });
-
-    }
 }
