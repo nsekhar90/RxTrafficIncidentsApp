@@ -80,13 +80,9 @@ public class MainActivity extends AppCompatActivity {
 //                .skip(4)
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .observeOn(rx.android.schedulers.AndroidSchedulers.mainThread())
-                .subscribe(new Action1<Void>() {
-                    @Override
-                    public void call(Void aVoid) {
-                        Toast.makeText(MainActivity.this, "Toast displayed after 500 ms", Toast.LENGTH_SHORT).show();
-
-                        AppsListActivity.start(MainActivity.this);
-                    }
+                .subscribe(aVoid -> {
+                    Toast.makeText(MainActivity.this, "Toast displayed after 500 ms", Toast.LENGTH_SHORT).show();
+                    AppsListActivity.start(MainActivity.this);
                 });
     }
 
@@ -99,12 +95,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setUpTimer() {
-         Observable<Long> timerObservable = Observable.interval(500, 400, TimeUnit.MILLISECONDS)
+        Observable<Long> timerObservable = Observable.interval(500, 400, TimeUnit.MILLISECONDS)
                 .take(10) //Do 10 times and automatically stop
                 .map(new Function<Long, Long>() {
                     @Override
                     public Long apply(Long aLong) throws Exception {
-                        return aLong*aLong;
+                        return aLong * aLong;
                     }
                 });
         timerObservable.subscribe(new Observer<Long>() {
