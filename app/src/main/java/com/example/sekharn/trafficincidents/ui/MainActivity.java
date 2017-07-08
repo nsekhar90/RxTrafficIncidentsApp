@@ -1,4 +1,4 @@
-package com.example.sekharn.trafficincidents;
+package com.example.sekharn.trafficincidents.ui;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -7,6 +7,8 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.sekharn.trafficincidents.R;
+import com.example.sekharn.trafficincidents.TrafficIndicentsApplication;
 import com.example.sekharn.trafficincidents.network.api.IGoogleAutoPlaceCompleteApi;
 import com.example.sekharn.trafficincidents.network.data.PredictionData;
 import com.jakewharton.rxbinding.view.RxView;
@@ -82,6 +84,8 @@ public class MainActivity extends AppCompatActivity {
                     @Override
                     public void call(Void aVoid) {
                         Toast.makeText(MainActivity.this, "Toast displayed after 500 ms", Toast.LENGTH_SHORT).show();
+
+                        AppsListActivity.start(MainActivity.this);
                     }
                 });
     }
