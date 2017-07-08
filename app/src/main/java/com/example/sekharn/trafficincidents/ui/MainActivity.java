@@ -9,8 +9,10 @@ import android.widget.Toast;
 
 import com.example.sekharn.trafficincidents.R;
 import com.example.sekharn.trafficincidents.TrafficIndicentsApplication;
+import com.example.sekharn.trafficincidents.model.LocationAddress;
 import com.example.sekharn.trafficincidents.network.api.IGoogleAutoPlaceCompleteApi;
 import com.example.sekharn.trafficincidents.network.api.IGoogleGeoCodingApi;
+import com.example.sekharn.trafficincidents.network.data.geocode.GeoCodeLatLong;
 import com.jakewharton.rxbinding.view.RxView;
 import com.jakewharton.rxbinding.widget.RxTextView;
 
@@ -29,6 +31,8 @@ public class MainActivity extends AppCompatActivity {
     private Subscription destinationLocationSubscription;
     private IGoogleAutoPlaceCompleteApi googleAutoPlaceCompleteApi;
     private IGoogleGeoCodingApi googleGeoCodingApi;
+    private LocationAddress sourceAddress;
+    private LocationAddress destinationAddress;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -58,8 +62,29 @@ public class MainActivity extends AppCompatActivity {
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(geoCodingData -> {
                                 if (geoCodingData.getGeoCodeResultsDatas().size() >= 1) {
-                                    Log.e("findMe", "Lat:" + geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong().getLatitude());
-                                    Log.e("findMe", "Long:" + geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong().getLongitude());
+                                    GeoCodeLatLong geometryData =  geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong();
+                                    sourceAddress = new LocationAddress(geometryData.getLatitude(), geometryData.getLongitude());
+                                    Log.e("findMe", "sourceAddress: lat: " + sourceAddress.getLatitude() + " long: " + sourceAddress.getLongitude());
+                                }
+                            }, throwable -> Log.e("findMe", "exception while fetching results: " + throwable.getCause()));
+                });
+
+         /*code to get lat, long of destination address */
+        destinationLocationSubscription = destinationLocationObservable
+                .debounce(500, TimeUnit.MILLISECONDS)
+                .subscribe(charSequence -> {
+                    googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString())
+                            .flatMap(autoCompletePredictionData -> {
+                                Log.e("findMe", "onNext in flatmap: " + autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
+                                return googleGeoCodingApi.getLatLong(autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
+                            })
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(geoCodingData -> {
+                                if (geoCodingData.getGeoCodeResultsDatas().size() >= 1) {
+                                    GeoCodeLatLong geometryData =  geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong();
+                                    destinationAddress = new LocationAddress(geometryData.getLatitude(), geometryData.getLongitude());
+                                    Log.e("findMe", "destinationAddress: lat: " + destinationAddress.getLatitude() + " long: " + destinationAddress.getLongitude());
                                 }
                             }, throwable -> Log.e("findMe", "exception while fetching results: " + throwable.getCause()));
                 });
