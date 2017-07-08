@@ -11,7 +11,6 @@ import com.example.sekharn.trafficincidents.R;
 import com.example.sekharn.trafficincidents.TrafficIndicentsApplication;
 import com.example.sekharn.trafficincidents.network.api.IGoogleAutoPlaceCompleteApi;
 import com.example.sekharn.trafficincidents.network.api.IGoogleGeoCodingApi;
-import com.example.sekharn.trafficincidents.network.data.AutoCompletePredictionData;
 import com.jakewharton.rxbinding.view.RxView;
 import com.jakewharton.rxbinding.widget.RxTextView;
 
@@ -19,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
-import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -40,33 +38,25 @@ public class MainActivity extends AppCompatActivity {
         googleGeoCodingApi = ((TrafficIndicentsApplication) getApplication()).getGeoCodingApi();
 
         AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.place_one);
+
+        /*code to get lat, long of source address */
         originLocationSubscription = RxTextView.textChanges(source)
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .subscribe(charSequence -> {
-                    Log.e("findMe", "charSequence = " + charSequence);
-                    Single<AutoCompletePredictionData> sourceDataObservable = googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString());
-                    sourceDataObservable.subscribeOn(Schedulers.io())
+                     googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString())
+                            .flatMap(autoCompletePredictionData -> {
+                                Log.e("findMe", "onNext in flatmap: " + autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
+                                return googleGeoCodingApi.getLatLong(autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
+                            })
+                            .subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(autoCompletePredictionData -> {
-                                if (autoCompletePredictionData.getPredictionDataList().size() > 1) {
-                                    Log.e("findMe", "onNext: " + autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
+                            .subscribe(geoCodingData -> {
+                                if (geoCodingData.getGeoCodeResultsDatas().size() >= 1) {
+                                    Log.e("findMe", "Lat:" + geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong().getLatitude());
+                                    Log.e("findMe", "Long:" + geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong().getLongitude());
                                 }
-                            }, throwable -> {
-                                    Log.e("findMe", "exception while fetching results");
-                            });
+                            }, throwable -> Log.e("findMe", "exception while fetching results: " + throwable.getCause()));
                 });
-
-         googleGeoCodingApi.getLatLong("Sunnyvale")
-                 .subscribeOn(Schedulers.io())
-                 .observeOn(AndroidSchedulers.mainThread())
-                 .subscribe((autoCompletePredictionData -> {
-                     if (autoCompletePredictionData != null) {
-                         Log.e("findMe", "onNext: lat =" + autoCompletePredictionData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong().getLatitude());
-                         Log.e("findMe", "onNext: long =" + autoCompletePredictionData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong().getLongitude());
-                     }
-                 }), throwable -> {
-
-                 });
 
 //        setUpTimer();
 
