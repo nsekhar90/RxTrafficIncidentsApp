@@ -1,18 +1,7 @@
 <resources>
     <string name="app_name">TrafficIncidents</string>
+    <string name="get_traffic_data">Get Traffic Data</string>
+    <string name="enter_destination">Enter Destination</string>
+    <string name="enter_source">Enter Source</string>
 
-    <string-array name="months">
-        <item>January</item>
-        <item>February</item>
-        <item>March</item>
-        <item>April</item>
-        <item>May</item>
-        <item>June</item>
-        <item>July</item>
-        <item>August</item>
-        <item>September</item>
-        <item>October</item>
-        <item>November</item>
-        <item>December</item>
-    </string-array>
 </resources>

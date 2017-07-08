@@ -26,6 +26,7 @@ import rx.Subscription;
 public class MainActivity extends AppCompatActivity {
 
     private Subscription originLocationSubscription;
+    private Subscription destinationLocationSubscription;
     private IGoogleAutoPlaceCompleteApi googleAutoPlaceCompleteApi;
     private IGoogleGeoCodingApi googleGeoCodingApi;
 
@@ -37,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
         googleAutoPlaceCompleteApi = ((TrafficIndicentsApplication) getApplication()).getGooglePlacesAutoCompleteApi();
         googleGeoCodingApi = ((TrafficIndicentsApplication) getApplication()).getGeoCodingApi();
 
-        AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.place_one);
+        AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.source_location);
 
         /*code to get lat, long of source address */
         originLocationSubscription = RxTextView.textChanges(source)
@@ -74,8 +75,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (!originLocationSubscription.isUnsubscribed()) {
+        if (originLocationSubscription != null && !originLocationSubscription.isUnsubscribed()) {
             originLocationSubscription.unsubscribe();
+        }
+
+        if (destinationLocationSubscription != null && !destinationLocationSubscription.isUnsubscribed()) {
+            destinationLocationSubscription.unsubscribe();
         }
     }
 
