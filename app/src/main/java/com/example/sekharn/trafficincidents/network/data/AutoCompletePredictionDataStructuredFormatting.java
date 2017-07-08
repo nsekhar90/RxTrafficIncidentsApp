@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
 
-public class PredictionDataStructuredFormatting implements Serializable {
+public class AutoCompletePredictionDataStructuredFormatting implements Serializable {
 
     @SerializedName("main_text")
     private String mainText;

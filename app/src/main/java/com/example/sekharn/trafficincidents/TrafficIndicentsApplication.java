@@ -3,6 +3,7 @@ package com.example.sekharn.trafficincidents;
 import android.app.Application;
 
 import com.example.sekharn.trafficincidents.network.api.IGoogleAutoPlaceCompleteApi;
+import com.example.sekharn.trafficincidents.network.api.IGoogleGeoCodingApi;
 
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -14,6 +15,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class TrafficIndicentsApplication extends Application {
 
     private IGoogleAutoPlaceCompleteApi googlePlacesAutoComplete;
+    private IGoogleGeoCodingApi geoCodingApi;
 
     @Override
     public void onCreate() {
@@ -23,6 +25,34 @@ public class TrafficIndicentsApplication extends Application {
 
     private void buildNecessaryComponents() {
        buildRetrofitForGooglePlacesAutoComplete();
+       buildRetrofitForGoogleGeoCoding();
+    }
+
+    private void buildRetrofitForGoogleGeoCoding() {
+        OkHttpClient.Builder httpClient =
+                new OkHttpClient.Builder();
+        httpClient.addInterceptor(chain -> {
+            Request original = chain.request();
+            HttpUrl originalHttpUrl = original.url();
+
+            HttpUrl url = originalHttpUrl.newBuilder()
+                    .addQueryParameter("key", getString(R.string.google_maps_geocoding_key))
+                    .build();
+
+            Request.Builder requestBuilder = original.newBuilder()
+                    .url(url);
+
+            Request request = requestBuilder.build();
+            return chain.proceed(request);
+        });
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .client(httpClient.build())
+                .baseUrl(getString(R.string.google_maps_geocoding_base_url))
+                .addConverterFactory(GsonConverterFactory.create())
+                .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                .build();
+        geoCodingApi = retrofit.create(IGoogleGeoCodingApi.class);
     }
 
     private void buildRetrofitForGooglePlacesAutoComplete() {
@@ -45,7 +75,7 @@ public class TrafficIndicentsApplication extends Application {
 
         Retrofit retrofit = new Retrofit.Builder()
                 .client(httpClient.build())
-                .baseUrl("https://maps.googleapis.com/maps/api/place/autocomplete/")
+                .baseUrl(getString(R.string.google_maps_autocomplete_base_url))
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
@@ -54,5 +84,9 @@ public class TrafficIndicentsApplication extends Application {
 
     public IGoogleAutoPlaceCompleteApi getGooglePlacesAutoCompleteApi() {
         return googlePlacesAutoComplete;
+    }
+
+    public IGoogleGeoCodingApi getGeoCodingApi() {
+        return geoCodingApi;
     }
 }

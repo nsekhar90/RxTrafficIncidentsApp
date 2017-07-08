@@ -5,19 +5,19 @@ import com.google.gson.annotations.SerializedName;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-public class PredictionData implements Serializable {
+public class AutoCompletePredictionData implements Serializable {
 
     @SerializedName("predictions")
-    private ArrayList<PredictionArrayData> predictionDataList;
+    private ArrayList<AutoCompletePredictionArrayData> predictionDataList;
 
     @SerializedName("status")
     private String status;
 
-    public ArrayList<PredictionArrayData> getPredictionDataList() {
+    public ArrayList<AutoCompletePredictionArrayData> getPredictionDataList() {
         return predictionDataList;
     }
 
-    public void setPredictionDataList(ArrayList<PredictionArrayData> predictionDataList) {
+    public void setPredictionDataList(ArrayList<AutoCompletePredictionArrayData> predictionDataList) {
         this.predictionDataList = predictionDataList;
     }
 

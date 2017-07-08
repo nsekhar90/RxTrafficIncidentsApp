@@ -3,14 +3,15 @@ package com.example.sekharn.trafficincidents.ui;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.sekharn.trafficincidents.R;
 import com.example.sekharn.trafficincidents.TrafficIndicentsApplication;
 import com.example.sekharn.trafficincidents.network.api.IGoogleAutoPlaceCompleteApi;
-import com.example.sekharn.trafficincidents.network.data.PredictionData;
+import com.example.sekharn.trafficincidents.network.api.IGoogleGeoCodingApi;
+import com.example.sekharn.trafficincidents.network.data.AutoCompletePredictionData;
 import com.jakewharton.rxbinding.view.RxView;
 import com.jakewharton.rxbinding.widget.RxTextView;
 
@@ -27,32 +28,47 @@ import rx.Subscription;
 public class MainActivity extends AppCompatActivity {
 
     private Subscription originLocationSubscription;
+    private IGoogleAutoPlaceCompleteApi googleAutoPlaceCompleteApi;
+    private IGoogleGeoCodingApi googleGeoCodingApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        IGoogleAutoPlaceCompleteApi googleAutoPlaceCompleteApi = ((TrafficIndicentsApplication) getApplication()).getGooglePlacesAutoCompleteApi();
+        googleAutoPlaceCompleteApi = ((TrafficIndicentsApplication) getApplication()).getGooglePlacesAutoCompleteApi();
+        googleGeoCodingApi = ((TrafficIndicentsApplication) getApplication()).getGeoCodingApi();
 
-        final EditText source = (EditText) findViewById(R.id.place_one);
+        AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.place_one);
         originLocationSubscription = RxTextView.textChanges(source)
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .subscribe(charSequence -> {
                     Log.e("findMe", "charSequence = " + charSequence);
-                    Single<PredictionData> sourceDataObservable = googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString());
+                    Single<AutoCompletePredictionData> sourceDataObservable = googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString());
                     sourceDataObservable.subscribeOn(Schedulers.io())
                             .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(predictionData -> {
-                                if (predictionData.getPredictionDataList().size() > 1) {
-                                    Log.e("findMe", "onNext: " + predictionData.getPredictionDataList().get(0).getDescription());
+                            .subscribe(autoCompletePredictionData -> {
+                                if (autoCompletePredictionData.getPredictionDataList().size() > 1) {
+                                    Log.e("findMe", "onNext: " + autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
                                 }
                             }, throwable -> {
                                     Log.e("findMe", "exception while fetching results");
                             });
                 });
 
-        setUpTimer();
+         googleGeoCodingApi.getLatLong("Sunnyvale")
+                 .subscribeOn(Schedulers.io())
+                 .observeOn(AndroidSchedulers.mainThread())
+                 .subscribe((autoCompletePredictionData -> {
+                     if (autoCompletePredictionData != null) {
+                         Log.e("findMe", "onNext: lat =" + autoCompletePredictionData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong().getLatitude());
+                         Log.e("findMe", "onNext: long =" + autoCompletePredictionData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong().getLongitude());
+                     }
+                 }), throwable -> {
+
+                 });
+
+//        setUpTimer();
 
         Button myButton = (Button) findViewById(R.id.my_button);
         RxView.clicks(myButton)

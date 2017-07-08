@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- API KEYS -->
     <string name="binge_key">AsnfTegFbPBgon4lBWIIYl6Q3AeqQuSLGN7DB6BuOuHbd5BV03a_03_AhKUBo9Qx</string>
     <string name="google_maps_geocoding_key">AIzaSyBJd5Sfdul4UUlWmrTrGOwQb1L2zR33Zcs</string>
     <string name="google_maps_places_autocomplete_key">AIzaSyCVyJQPZ-i7kr00CIN39UCezjbeOPS3N4w</string>
     <string name="google_geocoding_api">AIzaSyAMw0TUlxW68RG9hPr4hJBYfgPyQV0d8T4</string>
+
+    <!--  Base URLS of APIS -->
+    <string name="google_maps_autocomplete_base_url">https://maps.googleapis.com/maps/api/place/autocomplete/</string>
+    <string name="google_maps_geocoding_base_url">https://maps.googleapis.com/maps/api/geocode/</string>
 </resources>
