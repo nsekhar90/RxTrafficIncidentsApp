@@ -2,12 +2,9 @@ package com.example.sekharn.trafficincidents.ui;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.ActionMenuView;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -47,6 +44,7 @@ import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
+import timber.log.Timber;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -67,7 +65,6 @@ public class MainActivity extends AppCompatActivity {
     @DestLatLong
     LocationAddress destinationLatLong;
 
-
     private Disposable originLocationSubscription;
     private Disposable destinationLocationSubscription;
 
@@ -78,8 +75,6 @@ public class MainActivity extends AppCompatActivity {
 
     private Button getTrafficInfoButton;
     private ArrayList<Resources> trafficDataList;
-    private ActionMenuView menuView;
-    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -131,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
                             }, Throwable::printStackTrace);
                 });
 
-//        setUpTimer();
+        setUpTimer();
         setUpButtonEnableLogic(sourceLocationObservable, destinationLocationObservable);
 
         RxView.clicks(getTrafficInfoButton)
@@ -157,10 +152,7 @@ public class MainActivity extends AppCompatActivity {
                     }).observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(trafficData -> {
-
-                                Log.e("findMe", "trafficData = " + trafficData.getResourceSets().get(0).getResources().get(0).getDescription());
                                 trafficDataList = trafficData.getResourceSets().get(0).getResources();
-                                Log.e("findMe: fromTdataList", trafficDataList.get(0).getDescription());
                                 trafficDataAdapter = new TrafficDataAdapter(trafficDataList, R.layout.row_traffic_data_item);
                                 RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
                                 trafficDataView.setLayoutManager(layoutManager);
@@ -203,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
                 .take(10) //Do 10 times and automatically stop
                 .map(aLong -> aLong * aLong);
 
-        timerObservable.subscribe(aLong -> Log.e("findMe", "onNext of timer: " + aLong));
+        timerObservable.subscribe(aLong -> Timber.e("onNext of timer: " + aLong));
     }
 
     @Override

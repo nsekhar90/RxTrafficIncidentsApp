@@ -5,6 +5,8 @@ import android.app.Application;
 import com.example.sekharn.trafficincidents.di.component.AppComponent;
 import com.example.sekharn.trafficincidents.di.factory.AppComponentFactory;
 
+import timber.log.Timber;
+
 public class TrafficIncidentsApp extends Application {
 
     private AppComponent appComponent;
@@ -13,6 +15,9 @@ public class TrafficIncidentsApp extends Application {
     public void onCreate() {
         super.onCreate();
         buildComponentGraph();
+        if (BuildConfig.DEBUG) {
+            Timber.plant(new Timber.DebugTree());
+        }
     }
 
     private void buildComponentGraph() {
