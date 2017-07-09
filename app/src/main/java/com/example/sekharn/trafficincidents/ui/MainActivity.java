@@ -2,10 +2,15 @@ package com.example.sekharn.trafficincidents.ui;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.ActionMenuView;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 
@@ -73,6 +78,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Button getTrafficInfoButton;
     private ArrayList<Resources> trafficDataList;
+    private ActionMenuView menuView;
+    private Toolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -161,7 +168,6 @@ public class MainActivity extends AppCompatActivity {
                                 trafficDataView.setAdapter(trafficDataAdapter);
                             }, Throwable::printStackTrace);
                 });
-
     }
 
     private void setUpButtonEnableLogic(Observable<CharSequence> sourceLocationObservable, Observable<CharSequence> destinationLocationObservable) {
@@ -171,6 +177,14 @@ public class MainActivity extends AppCompatActivity {
             return sourceCheck && destinationCheck;
         }).subscribe(getTrafficInfoButton::setEnabled); //same as getTrafficInfoButton.setEnabled(boolean)
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main_activity, menu);
+        return true;
+    }
+
 
     @Override
     protected void onStop() {
@@ -190,5 +204,17 @@ public class MainActivity extends AppCompatActivity {
                 .map(aLong -> aLong * aLong);
 
         timerObservable.subscribe(aLong -> Log.e("findMe", "onNext of timer: " + aLong));
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.action_callable_observer:
+                CallableObservableActivity.start(this);
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 }
