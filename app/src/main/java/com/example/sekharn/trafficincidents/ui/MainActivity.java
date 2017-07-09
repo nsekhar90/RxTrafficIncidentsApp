@@ -93,18 +93,25 @@ public class MainActivity extends AppCompatActivity {
                             }, throwable -> Log.e("findMe", "exception while fetching results: " + throwable.getCause()));
                 });
 
+        setUpTimer();
         setUpButtonEnableLogic(sourceLocationObservable, destinationLocationObservable);
 
 //        RxView.clicks(getTrafficInfoButton)
 ////                .skip(4)
 //                .throttleFirst(5, TimeUnit.MILLISECONDS) //throttleFirst just stops further events for next 5 seconds so if user clicks the button multiple times,
-//                .flatMap(new Func1<Void, rx.Observable<?>>() {
+//                .flatMap(new Function<Object, ObservableSource<TrafficData>>() {
 //                    @Override
-//                    public rx.Observable<?> call(Void aVoid) {
-//                        return bingeTrafficApi.getTrafficData("37,-105,45,-94");
+//                    public ObservableSource<TrafficData> apply(@NonNull Object o) throws Exception {
+//                        return bingeTrafficApi.getTrafficData("37.354107,-121.95524,37.354107,-121.95524");
 //                    }
-//                }).subscribeOn(rx.Scheduler.i);
-//        setUpTimer();
+//                }).subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribe(trafficData -> {
+//                   Log.e("findMe", "trafficData = " + trafficData.getAuthenticationResultCode());
+//                }, throwable -> {
+//                    Log.e("findMe", "trafficData error= " + throwable.getStackTrace().toString());
+//                });
+
     }
 
     private void setUpButtonEnableLogic(Observable<CharSequence> sourceLocationObservable, Observable<CharSequence> destinationLocationObservable) {
