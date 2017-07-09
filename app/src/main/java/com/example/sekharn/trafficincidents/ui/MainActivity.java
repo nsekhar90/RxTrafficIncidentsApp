@@ -15,7 +15,9 @@ import com.example.sekharn.trafficincidents.model.LocationAddress;
 import com.example.sekharn.trafficincidents.network.api.IBingTrafficDataApi;
 import com.example.sekharn.trafficincidents.network.api.IGoogleAutoPlaceCompleteApi;
 import com.example.sekharn.trafficincidents.network.api.IGoogleGeoCodingApi;
+import com.example.sekharn.trafficincidents.network.data.bingetraffic.TrafficData;
 import com.example.sekharn.trafficincidents.network.data.geocode.GeoCodeLatLong;
+import com.example.sekharn.trafficincidents.network.data.geocode.GeoCodingData;
 import com.example.sekharn.trafficincidents.util.ApiUtils;
 import com.jakewharton.rxbinding2.view.RxView;
 import com.jakewharton.rxbinding2.widget.RxAutoCompleteTextView;
@@ -26,8 +28,13 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.SingleSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.annotations.NonNull;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.BiFunction;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
@@ -75,67 +82,59 @@ public class MainActivity extends AppCompatActivity {
                 .subscribe(charSequence -> {
                     googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString())
                             .observeOn(AndroidSchedulers.mainThread())
-                            .doAfterSuccess(autoCompletePredictionData -> {
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(autoCompletePredictionData -> {
                                 sourceAddressAdapter = new AutoCompleteSuggestionsAdapter(this, R.layout.row_auto_complete_place_suggestion, autoCompletePredictionData.getPredictionDataList());
                                 source.setAdapter(sourceAddressAdapter);
-                            })
-                            .flatMap(autoCompletePredictionData -> {
-                                Log.e("findMe", "onNext in flatmap: " + autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
-                                return googleGeoCodingApi.getLatLong(autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
-                            })
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(geoCodingData -> {
-                                if (geoCodingData.getGeoCodeResultsDatas().size() >= 1) {
-                                    GeoCodeLatLong geometryData = geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong();
-                                    sourceLatLong.setLatAndLong(geometryData.getLatitude(), geometryData.getLongitude());
-                                }
-                            }, throwable -> Log.e("findMe", "exception while fetching results: " + throwable.getCause()));
+                            }, Throwable::printStackTrace);
                 });
 
         RxAutoCompleteTextView.itemClickEvents(source).subscribe(adapterViewItemClickEvent -> {
-           Log.e("findMe", "onItemSelected source: " + sourceAddressAdapter.getItem(adapterViewItemClickEvent.position()).getDescription());
+            sourceLatLong.setAddress(sourceAddressAdapter.getItem(adapterViewItemClickEvent.position()).getDescription());
         });
 
         RxAutoCompleteTextView.itemClickEvents(destination).subscribe(adapterViewItemClickEvent -> {
-           Log.e("findMe", "onItemSelected destination: " + destinationAddressAdapter.getItem(adapterViewItemClickEvent.position()).getDescription());
+            destinationLatLong.setAddress(destinationAddressAdapter.getItem(adapterViewItemClickEvent.position()).getDescription());
         });
 
          /*code to get lat, long of destination address */
         destinationLocationSubscription = destinationLocationObservable
                 .debounce(500, TimeUnit.MILLISECONDS)
-                .subscribe(charSequence -> {
-                    googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString())
+                .subscribe(charSequence1 -> {
+                    googleAutoPlaceCompleteApi.getQueryResults(charSequence1.toString())
                             .observeOn(AndroidSchedulers.mainThread())
-                            .doAfterSuccess(autoCompletePredictionData -> {
+                            .subscribeOn(Schedulers.io())
+                            .subscribe(autoCompletePredictionData -> {
                                 destinationAddressAdapter = new AutoCompleteSuggestionsAdapter(this, R.layout.row_auto_complete_place_suggestion, autoCompletePredictionData.getPredictionDataList());
                                 destination.setAdapter(destinationAddressAdapter);
-                            })
-                            .flatMap(autoCompletePredictionData -> {
-                                Log.e("findMe", "onNext in flatmap: " + autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
-                                return googleGeoCodingApi.getLatLong(autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
-                            })
-                            .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe(geoCodingData -> {
-                                if (geoCodingData.getGeoCodeResultsDatas().size() >= 1) {
-                                    GeoCodeLatLong geometryData = geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong();
-                                    destinationLatLong.setLatAndLong(geometryData.getLatitude(), geometryData.getLongitude());
-                                    Log.e("findMe", "destinationAddress: lat: " + destinationLatLong.getLatitude() + " long: " + destinationLatLong.getLongitude());
-                                }
-                            }, throwable -> Log.e("findMe", "exception while fetching results: " + throwable.getCause()));
+                            }, Throwable::printStackTrace);
                 });
 
-        setUpTimer();
+//        setUpTimer();
         setUpButtonEnableLogic(sourceLocationObservable, destinationLocationObservable);
 
         RxView.clicks(getTrafficInfoButton)
                 .throttleFirst(5, TimeUnit.SECONDS) //throttleFirst just stops further events for next 5 seconds so if user clicks the button multiple times,
-                .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(aVoid -> {
-                    bingeTrafficApi.getTrafficData(ApiUtils.getFormattedLatLongForTrafficDetailsApi(sourceLatLong, destinationLatLong))
+                    Single<GeoCodingData> geoCodingSourceObservable = googleGeoCodingApi.getLatLong(sourceLatLong.getAddress());
+                    Single<GeoCodingData> geoCodingDestinationObservable = googleGeoCodingApi.getLatLong(destinationLatLong.getAddress());
+
+                    Single.zip(geoCodingSourceObservable.subscribeOn(Schedulers.newThread()), geoCodingDestinationObservable.subscribeOn(Schedulers.newThread()), new BiFunction<GeoCodingData, GeoCodingData, String>() {
+                        @Override
+                        public String apply(@NonNull GeoCodingData geoCodingData, @NonNull GeoCodingData geoCodingData2) throws Exception {
+                            GeoCodeLatLong sourceData = geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong();
+                            GeoCodeLatLong destinationData = geoCodingData2.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong();
+                            sourceLatLong.setLatAndLong(sourceData.getLatitude(), sourceData.getLongitude());
+                            destinationLatLong.setLatAndLong(destinationData.getLatitude(), destinationData.getLongitude());
+                            return ApiUtils.getFormattedLatLongForTrafficDetailsApi(sourceLatLong, destinationLatLong);
+                        }
+                    }).flatMap(new Function<String, SingleSource<TrafficData>>() {
+                        @Override
+                        public SingleSource<TrafficData> apply(@NonNull String s) throws Exception {
+                            return bingeTrafficApi.getTrafficData(s);
+                        }
+                    }).observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(trafficData -> {
                                 Log.e("findMe", "trafficData = " + trafficData.getResourceSetses().get(0).getResources().get(0).getDescription());
                             }, throwable -> {

@@ -4,6 +4,7 @@ public class LocationAddress {
 
     private float latitude;
     private float longitude;
+    private String address;
 
     public float getLatitude() {
         return latitude;
@@ -18,4 +19,11 @@ public class LocationAddress {
         this.longitude = longitude;
     }
 
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
 }
