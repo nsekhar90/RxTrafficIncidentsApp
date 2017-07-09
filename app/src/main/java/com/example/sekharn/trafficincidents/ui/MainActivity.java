@@ -26,7 +26,6 @@ import java.util.concurrent.TimeUnit;
 import javax.inject.Inject;
 
 import io.reactivex.Observable;
-import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -171,27 +170,6 @@ public class MainActivity extends AppCompatActivity {
                 .take(10) //Do 10 times and automatically stop
                 .map(aLong -> aLong * aLong);
 
-        timerObservable.subscribe(new Observer<Long>() {
-            @Override
-            public void onSubscribe(Disposable d) {
-
-            }
-
-            @Override
-            public void onNext(Long aLong) {
-                Log.e("findMe", "onNext of timer: " + aLong);
-            }
-
-            @Override
-            public void onError(Throwable e) {
-
-            }
-
-            @Override
-            public void onComplete() {
-
-            }
-        });
-
+        timerObservable.subscribe(aLong -> Log.e("findMe", "onNext of timer: " + aLong));
     }
 }
