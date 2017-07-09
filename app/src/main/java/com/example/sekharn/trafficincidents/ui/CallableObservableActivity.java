@@ -57,7 +57,6 @@ public class CallableObservableActivity extends AppCompatActivity {
         });
     }
 
-
     private void showProgress() {
         progressBar.setVisibility(View.VISIBLE);
     }
