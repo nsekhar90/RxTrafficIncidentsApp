@@ -24,7 +24,7 @@ public class TrafficData implements Serializable {
         return copyright;
     }
 
-    public ArrayList<ResourceSets> getResourceSetses() {
+    public ArrayList<ResourceSets> getResourceSets() {
         return resourceSetses;
     }
 }

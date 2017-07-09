@@ -18,6 +18,9 @@ public class Resources implements Serializable {
     @SerializedName("detour")
     private String detour;
 
+    @SerializedName("verified")
+    private boolean verified;
+
     public String getType() {
         return type;
     }
@@ -48,5 +51,9 @@ public class Resources implements Serializable {
 
     public void setDetour(String detour) {
         this.detour = detour;
+    }
+
+    public boolean isVerified() {
+        return verified;
     }
 }

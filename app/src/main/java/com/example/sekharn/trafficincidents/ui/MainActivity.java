@@ -2,6 +2,9 @@ package com.example.sekharn.trafficincidents.ui;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
@@ -9,12 +12,14 @@ import android.widget.Button;
 import com.example.sekharn.trafficincidents.R;
 import com.example.sekharn.trafficincidents.TrafficIncidentsApp;
 import com.example.sekharn.trafficincidents.adapters.AutoCompleteSuggestionsAdapter;
+import com.example.sekharn.trafficincidents.adapters.TrafficDataAdapter;
 import com.example.sekharn.trafficincidents.di.annotation.DestLatLong;
 import com.example.sekharn.trafficincidents.di.annotation.SourceLatLong;
 import com.example.sekharn.trafficincidents.model.LocationAddress;
 import com.example.sekharn.trafficincidents.network.api.IBingTrafficDataApi;
 import com.example.sekharn.trafficincidents.network.api.IGoogleAutoPlaceCompleteApi;
 import com.example.sekharn.trafficincidents.network.api.IGoogleGeoCodingApi;
+import com.example.sekharn.trafficincidents.network.data.bingetraffic.Resources;
 import com.example.sekharn.trafficincidents.network.data.bingetraffic.TrafficData;
 import com.example.sekharn.trafficincidents.network.data.geocode.GeoCodeLatLong;
 import com.example.sekharn.trafficincidents.network.data.geocode.GeoCodingData;
@@ -23,6 +28,7 @@ import com.jakewharton.rxbinding2.view.RxView;
 import com.jakewharton.rxbinding2.widget.RxAutoCompleteTextView;
 import com.jakewharton.rxbinding2.widget.RxTextView;
 
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -38,9 +44,6 @@ import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity {
-
-    private Disposable originLocationSubscription;
-    private Disposable destinationLocationSubscription;
 
     @Inject
     IGoogleAutoPlaceCompleteApi googleAutoPlaceCompleteApi;
@@ -59,9 +62,17 @@ public class MainActivity extends AppCompatActivity {
     @DestLatLong
     LocationAddress destinationLatLong;
 
-    private Button getTrafficInfoButton;
+
+    private Disposable originLocationSubscription;
+    private Disposable destinationLocationSubscription;
+
     private AutoCompleteSuggestionsAdapter sourceAddressAdapter;
     private AutoCompleteSuggestionsAdapter destinationAddressAdapter;
+    private TrafficDataAdapter trafficDataAdapter;
+    private RecyclerView trafficDataView;
+
+    private Button getTrafficInfoButton;
+    private ArrayList<Resources> trafficDataList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,6 +83,9 @@ public class MainActivity extends AppCompatActivity {
         AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.source_location);
         AutoCompleteTextView destination = (AutoCompleteTextView) findViewById(R.id.destination_location);
         getTrafficInfoButton = (Button) findViewById(R.id.my_button);
+        trafficDataView = (RecyclerView) findViewById(R.id.traffic_data_view);
+
+        trafficDataList = new ArrayList<>();
 
         Observable<CharSequence> sourceLocationObservable = RxTextView.textChanges(source);
         Observable<CharSequence> destinationLocationObservable = RxTextView.textChanges(destination);
@@ -84,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(autoCompletePredictionData -> {
-                                sourceAddressAdapter = new AutoCompleteSuggestionsAdapter(this, R.layout.row_auto_complete_place_suggestion, autoCompletePredictionData.getPredictionDataList());
+                                sourceAddressAdapter = new AutoCompleteSuggestionsAdapter(this, R.layout.row_auto_complete_place_suggestion_item, autoCompletePredictionData.getPredictionDataList());
                                 source.setAdapter(sourceAddressAdapter);
                             }, Throwable::printStackTrace);
                 });
@@ -105,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(autoCompletePredictionData -> {
-                                destinationAddressAdapter = new AutoCompleteSuggestionsAdapter(this, R.layout.row_auto_complete_place_suggestion, autoCompletePredictionData.getPredictionDataList());
+                                destinationAddressAdapter = new AutoCompleteSuggestionsAdapter(this, R.layout.row_auto_complete_place_suggestion_item, autoCompletePredictionData.getPredictionDataList());
                                 destination.setAdapter(destinationAddressAdapter);
                             }, Throwable::printStackTrace);
                 });
@@ -136,10 +150,16 @@ public class MainActivity extends AppCompatActivity {
                     }).observeOn(AndroidSchedulers.mainThread())
                             .subscribeOn(Schedulers.io())
                             .subscribe(trafficData -> {
-                                Log.e("findMe", "trafficData = " + trafficData.getResourceSetses().get(0).getResources().get(0).getDescription());
-                            }, throwable -> {
-                                Log.e("findMe", "error = " + throwable.getMessage());
-                            });
+
+                                Log.e("findMe", "trafficData = " + trafficData.getResourceSets().get(0).getResources().get(0).getDescription());
+                                trafficDataList = trafficData.getResourceSets().get(0).getResources();
+                                Log.e("findMe: fromTdataList", trafficDataList.get(0).getDescription());
+                                trafficDataAdapter = new TrafficDataAdapter(trafficDataList, R.layout.row_traffic_data_item);
+                                RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
+                                trafficDataView.setLayoutManager(layoutManager);
+                                trafficDataView.setItemAnimator(new DefaultItemAnimator());
+                                trafficDataView.setAdapter(trafficDataAdapter);
+                            }, Throwable::printStackTrace);
                 });
 
     }
