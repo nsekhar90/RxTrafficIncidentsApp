@@ -5,16 +5,15 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
-import android.widget.Toast;
 
 import com.example.sekharn.trafficincidents.R;
 import com.example.sekharn.trafficincidents.TrafficIndicentsApplication;
 import com.example.sekharn.trafficincidents.model.LocationAddress;
+import com.example.sekharn.trafficincidents.network.api.IBingTrafficDataApi;
 import com.example.sekharn.trafficincidents.network.api.IGoogleAutoPlaceCompleteApi;
 import com.example.sekharn.trafficincidents.network.api.IGoogleGeoCodingApi;
 import com.example.sekharn.trafficincidents.network.data.geocode.GeoCodeLatLong;
-import com.jakewharton.rxbinding.view.RxView;
-import com.jakewharton.rxbinding.widget.RxTextView;
+import com.jakewharton.rxbinding2.widget.RxTextView;
 
 import java.util.concurrent.TimeUnit;
 
@@ -23,14 +22,16 @@ import io.reactivex.Observer;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
-import rx.Subscription;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Subscription originLocationSubscription;
-    private Subscription destinationLocationSubscription;
+    private Disposable originLocationSubscription;
+    private Disposable destinationLocationSubscription;
+
     private IGoogleAutoPlaceCompleteApi googleAutoPlaceCompleteApi;
     private IGoogleGeoCodingApi googleGeoCodingApi;
+    private IBingTrafficDataApi bingeTrafficApi;
+
     private LocationAddress sourceAddress;
     private LocationAddress destinationAddress;
 
@@ -43,13 +44,14 @@ public class MainActivity extends AppCompatActivity {
 
         googleAutoPlaceCompleteApi = ((TrafficIndicentsApplication) getApplication()).getGooglePlacesAutoCompleteApi();
         googleGeoCodingApi = ((TrafficIndicentsApplication) getApplication()).getGeoCodingApi();
+        bingeTrafficApi = ((TrafficIndicentsApplication) getApplication()).getBingTrafficDataApi();
 
         AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.source_location);
         AutoCompleteTextView destination = (AutoCompleteTextView) findViewById(R.id.destination_location);
         getTrafficInfoButton = (Button) findViewById(R.id.my_button);
 
-        rx.Observable<CharSequence> sourceLocationObservable = RxTextView.textChanges(source);
-        rx.Observable<CharSequence> destinationLocationObservable = RxTextView.textChanges(destination);
+        Observable<CharSequence> sourceLocationObservable = RxTextView.textChanges(source);
+        Observable<CharSequence> destinationLocationObservable = RxTextView.textChanges(destination);
 
         /*code to get lat, long of source address */
         originLocationSubscription = sourceLocationObservable
@@ -64,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(geoCodingData -> {
                                 if (geoCodingData.getGeoCodeResultsDatas().size() >= 1) {
-                                    GeoCodeLatLong geometryData =  geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong();
+                                    GeoCodeLatLong geometryData = geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong();
                                     sourceAddress = new LocationAddress(geometryData.getLatitude(), geometryData.getLongitude());
                                     Log.e("findMe", "sourceAddress: lat: " + sourceAddress.getLatitude() + " long: " + sourceAddress.getLongitude());
                                 }
@@ -84,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
                             .observeOn(AndroidSchedulers.mainThread())
                             .subscribe(geoCodingData -> {
                                 if (geoCodingData.getGeoCodeResultsDatas().size() >= 1) {
-                                    GeoCodeLatLong geometryData =  geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong();
+                                    GeoCodeLatLong geometryData = geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong();
                                     destinationAddress = new LocationAddress(geometryData.getLatitude(), geometryData.getLongitude());
                                     Log.e("findMe", "destinationAddress: lat: " + destinationAddress.getLatitude() + " long: " + destinationAddress.getLongitude());
                                 }
@@ -93,19 +95,20 @@ public class MainActivity extends AppCompatActivity {
 
         setUpButtonEnableLogic(sourceLocationObservable, destinationLocationObservable);
 
-        RxView.clicks(getTrafficInfoButton)
-//                .skip(4)
-                .debounce(500, TimeUnit.MILLISECONDS)
-                .observeOn(rx.android.schedulers.AndroidSchedulers.mainThread())
-                .subscribe(aVoid -> {
-                    Toast.makeText(MainActivity.this, "Toast displayed after 500 ms", Toast.LENGTH_SHORT).show();
-                    AppsListActivity.start(MainActivity.this);
-                });
+//        RxView.clicks(getTrafficInfoButton)
+////                .skip(4)
+//                .throttleFirst(5, TimeUnit.MILLISECONDS) //throttleFirst just stops further events for next 5 seconds so if user clicks the button multiple times,
+//                .flatMap(new Func1<Void, rx.Observable<?>>() {
+//                    @Override
+//                    public rx.Observable<?> call(Void aVoid) {
+//                        return bingeTrafficApi.getTrafficData("37,-105,45,-94");
+//                    }
+//                }).subscribeOn(rx.Scheduler.i);
 //        setUpTimer();
     }
 
-    private void setUpButtonEnableLogic(rx.Observable<CharSequence> sourceLocationObservable, rx.Observable<CharSequence> destinationLocationObservable) {
-        rx.Observable.combineLatest(sourceLocationObservable, destinationLocationObservable, (charSequence, charSequence2) -> {
+    private void setUpButtonEnableLogic(Observable<CharSequence> sourceLocationObservable, Observable<CharSequence> destinationLocationObservable) {
+        Observable.combineLatest(sourceLocationObservable, destinationLocationObservable, (charSequence, charSequence2) -> {
             boolean sourceCheck = charSequence.toString().length() >= 5;
             boolean destinationCheck = charSequence2.toString().length() >= 5;
             return sourceCheck && destinationCheck;
@@ -115,12 +118,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (originLocationSubscription != null && !originLocationSubscription.isUnsubscribed()) {
-            originLocationSubscription.unsubscribe();
+        if (originLocationSubscription != null && !originLocationSubscription.isDisposed()) {
+            originLocationSubscription.dispose();
         }
 
-        if (destinationLocationSubscription != null && !destinationLocationSubscription.isUnsubscribed()) {
-            destinationLocationSubscription.unsubscribe();
+        if (destinationLocationSubscription != null && !destinationLocationSubscription.isDisposed()) {
+            destinationLocationSubscription.dispose();
         }
     }
 
