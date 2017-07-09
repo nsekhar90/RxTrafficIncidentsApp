@@ -18,6 +18,7 @@ import com.example.sekharn.trafficincidents.network.api.IGoogleGeoCodingApi;
 import com.example.sekharn.trafficincidents.network.data.geocode.GeoCodeLatLong;
 import com.example.sekharn.trafficincidents.util.ApiUtils;
 import com.jakewharton.rxbinding2.view.RxView;
+import com.jakewharton.rxbinding2.widget.RxAutoCompleteTextView;
 import com.jakewharton.rxbinding2.widget.RxTextView;
 
 import java.util.concurrent.TimeUnit;
@@ -53,6 +54,8 @@ public class MainActivity extends AppCompatActivity {
     LocationAddress destinationLatLong;
 
     private Button getTrafficInfoButton;
+    private AutoCompleteSuggestionsAdapter sourceAddressAdapter;
+    private AutoCompleteSuggestionsAdapter destinationAddressAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,8 +77,8 @@ public class MainActivity extends AppCompatActivity {
                     googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString())
                             .observeOn(AndroidSchedulers.mainThread())
                             .doAfterSuccess(autoCompletePredictionData -> {
-                                AutoCompleteSuggestionsAdapter placeAdapter = new AutoCompleteSuggestionsAdapter(this, R.layout.row_auto_complete_place_suggestion, autoCompletePredictionData.getPredictionDataList());
-                                source.setAdapter(placeAdapter);
+                                sourceAddressAdapter = new AutoCompleteSuggestionsAdapter(this, R.layout.row_auto_complete_place_suggestion, autoCompletePredictionData.getPredictionDataList());
+                                source.setAdapter(sourceAddressAdapter);
                             })
                             .flatMap(autoCompletePredictionData -> {
                                 Log.e("findMe", "onNext in flatmap: " + autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
@@ -91,6 +94,14 @@ public class MainActivity extends AppCompatActivity {
                             }, throwable -> Log.e("findMe", "exception while fetching results: " + throwable.getCause()));
                 });
 
+        RxAutoCompleteTextView.itemClickEvents(source).subscribe(adapterViewItemClickEvent -> {
+           Log.e("findMe", "onItemSelected source: " + sourceAddressAdapter.getItem(adapterViewItemClickEvent.position()).getDescription());
+        });
+
+        RxAutoCompleteTextView.itemClickEvents(destination).subscribe(adapterViewItemClickEvent -> {
+           Log.e("findMe", "onItemSelected destination: " + destinationAddressAdapter.getItem(adapterViewItemClickEvent.position()).getDescription());
+        });
+
          /*code to get lat, long of destination address */
         destinationLocationSubscription = destinationLocationObservable
                 .debounce(500, TimeUnit.MILLISECONDS)
@@ -98,8 +109,8 @@ public class MainActivity extends AppCompatActivity {
                     googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString())
                             .observeOn(AndroidSchedulers.mainThread())
                             .doAfterSuccess(autoCompletePredictionData -> {
-                                AutoCompleteSuggestionsAdapter placeAdapter = new AutoCompleteSuggestionsAdapter(this, R.layout.row_auto_complete_place_suggestion, autoCompletePredictionData.getPredictionDataList());
-                                destination.setAdapter(placeAdapter);
+                                destinationAddressAdapter = new AutoCompleteSuggestionsAdapter(this, R.layout.row_auto_complete_place_suggestion, autoCompletePredictionData.getPredictionDataList());
+                                destination.setAdapter(destinationAddressAdapter);
                             })
                             .flatMap(autoCompletePredictionData -> {
                                 Log.e("findMe", "onNext in flatmap: " + autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
