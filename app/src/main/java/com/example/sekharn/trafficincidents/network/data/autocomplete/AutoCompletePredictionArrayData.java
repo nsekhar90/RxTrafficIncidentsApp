@@ -19,4 +19,13 @@ public class AutoCompletePredictionArrayData implements Serializable {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public AutoCompletePredictionDataStructuredFormatting getAutoCompletePredictionDataStructuredFormatting() {
+        return autoCompletePredictionDataStructuredFormatting;
+    }
+
+    @Override
+    public String toString() {
+        return autoCompletePredictionDataStructuredFormatting.getMainText() + ", " + autoCompletePredictionDataStructuredFormatting.getSecondaryText();
+    }
 }

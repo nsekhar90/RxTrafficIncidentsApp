@@ -8,6 +8,7 @@ import android.widget.Button;
 
 import com.example.sekharn.trafficincidents.R;
 import com.example.sekharn.trafficincidents.TrafficIncidentsApp;
+import com.example.sekharn.trafficincidents.adapters.AutoCompleteSuggestionsAdapter;
 import com.example.sekharn.trafficincidents.di.annotation.DestLatLong;
 import com.example.sekharn.trafficincidents.di.annotation.SourceLatLong;
 import com.example.sekharn.trafficincidents.model.LocationAddress;
@@ -71,6 +72,11 @@ public class MainActivity extends AppCompatActivity {
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .subscribe(charSequence -> {
                     googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .doAfterSuccess(autoCompletePredictionData -> {
+                                AutoCompleteSuggestionsAdapter placeAdapter = new AutoCompleteSuggestionsAdapter(this, R.layout.row_auto_complete_place_suggestion, autoCompletePredictionData.getPredictionDataList());
+                                source.setAdapter(placeAdapter);
+                            })
                             .flatMap(autoCompletePredictionData -> {
                                 Log.e("findMe", "onNext in flatmap: " + autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
                                 return googleGeoCodingApi.getLatLong(autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
@@ -81,7 +87,6 @@ public class MainActivity extends AppCompatActivity {
                                 if (geoCodingData.getGeoCodeResultsDatas().size() >= 1) {
                                     GeoCodeLatLong geometryData = geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong();
                                     sourceLatLong.setLatAndLong(geometryData.getLatitude(), geometryData.getLongitude());
-                                    Log.e("findMe", "sourceAddress: lat: " + sourceLatLong.getLatitude() + " long: " + sourceLatLong.getLongitude());
                                 }
                             }, throwable -> Log.e("findMe", "exception while fetching results: " + throwable.getCause()));
                 });
@@ -91,6 +96,11 @@ public class MainActivity extends AppCompatActivity {
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .subscribe(charSequence -> {
                     googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .doAfterSuccess(autoCompletePredictionData -> {
+                                AutoCompleteSuggestionsAdapter placeAdapter = new AutoCompleteSuggestionsAdapter(this, R.layout.row_auto_complete_place_suggestion, autoCompletePredictionData.getPredictionDataList());
+                                destination.setAdapter(placeAdapter);
+                            })
                             .flatMap(autoCompletePredictionData -> {
                                 Log.e("findMe", "onNext in flatmap: " + autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
                                 return googleGeoCodingApi.getLatLong(autoCompletePredictionData.getPredictionDataList().get(0).getDescription());
