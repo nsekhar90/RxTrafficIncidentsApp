@@ -40,6 +40,7 @@ import io.reactivex.Single;
 import io.reactivex.SingleSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.annotations.NonNull;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.BiFunction;
 import io.reactivex.functions.Function;
@@ -65,8 +66,9 @@ public class MainActivity extends AppCompatActivity {
     @DestLatLong
     LocationAddress destinationLatLong;
 
-    private Disposable originLocationSubscription;
-    private Disposable destinationLocationSubscription;
+    private CompositeDisposable mainActivityCompositeDisposable;
+    private Disposable sourceLocationDisposable;
+    private Disposable destinationLocationDisposable;
 
     private AutoCompleteSuggestionsAdapter sourceAddressAdapter;
     private AutoCompleteSuggestionsAdapter destinationAddressAdapter;
@@ -91,9 +93,10 @@ public class MainActivity extends AppCompatActivity {
 
         Observable<CharSequence> sourceLocationObservable = RxTextView.textChanges(source);
         Observable<CharSequence> destinationLocationObservable = RxTextView.textChanges(destination);
+        mainActivityCompositeDisposable = new CompositeDisposable();
 
         /*code to get lat, long of source address */
-        originLocationSubscription = sourceLocationObservable
+        sourceLocationDisposable = sourceLocationObservable
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .subscribe(charSequence -> {
                     googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString())
@@ -104,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
                                 source.setAdapter(sourceAddressAdapter);
                             }, Throwable::printStackTrace);
                 });
+        mainActivityCompositeDisposable.add(sourceLocationDisposable);
 
         RxAutoCompleteTextView.itemClickEvents(source).subscribe(adapterViewItemClickEvent -> {
             sourceLatLong.setAddress(sourceAddressAdapter.getItem(adapterViewItemClickEvent.position()).getDescription());
@@ -114,7 +118,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
          /*code to get lat, long of destination address */
-        destinationLocationSubscription = destinationLocationObservable
+        destinationLocationDisposable = destinationLocationObservable
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .subscribe(charSequence1 -> {
                     googleAutoPlaceCompleteApi.getQueryResults(charSequence1.toString())
@@ -125,6 +129,7 @@ public class MainActivity extends AppCompatActivity {
                                 destination.setAdapter(destinationAddressAdapter);
                             }, Throwable::printStackTrace);
                 });
+        mainActivityCompositeDisposable.add(destinationLocationDisposable);
 
         setUpTimer();
         setUpButtonEnableLogic(sourceLocationObservable, destinationLocationObservable);
@@ -181,12 +186,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStop() {
         super.onStop();
-        if (originLocationSubscription != null && !originLocationSubscription.isDisposed()) {
-            originLocationSubscription.dispose();
-        }
-
-        if (destinationLocationSubscription != null && !destinationLocationSubscription.isDisposed()) {
-            destinationLocationSubscription.dispose();
+        if (mainActivityCompositeDisposable != null && !mainActivityCompositeDisposable.isDisposed()) {
+            mainActivityCompositeDisposable.dispose();
         }
     }
 
@@ -200,7 +201,6 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle item selection
         switch (item.getItemId()) {
             case R.id.action_callable_observer:
                 CallableObservableActivity.start(this);
