@@ -5,6 +5,9 @@ public class LocationAddress {
     private float latitude;
     private float longitude;
 
+    public LocationAddress() {
+    }
+
     public LocationAddress(float latitude, float longitude) {
         this.latitude = latitude;
         this.longitude = longitude;
@@ -16,6 +19,11 @@ public class LocationAddress {
 
     public float getLongitude() {
         return longitude;
+    }
+
+    public void setLatAndLong(float latitude, float longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public void setLatitude(float latitude) {

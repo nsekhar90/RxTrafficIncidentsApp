@@ -7,7 +7,9 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 
 import com.example.sekharn.trafficincidents.R;
-import com.example.sekharn.trafficincidents.TrafficIndicentsApplication;
+import com.example.sekharn.trafficincidents.TrafficIncidentsApp;
+import com.example.sekharn.trafficincidents.di.annotation.DestLatLong;
+import com.example.sekharn.trafficincidents.di.annotation.SourceLatLong;
 import com.example.sekharn.trafficincidents.model.LocationAddress;
 import com.example.sekharn.trafficincidents.network.api.IBingTrafficDataApi;
 import com.example.sekharn.trafficincidents.network.api.IGoogleAutoPlaceCompleteApi;
@@ -18,6 +20,8 @@ import com.jakewharton.rxbinding2.view.RxView;
 import com.jakewharton.rxbinding2.widget.RxTextView;
 
 import java.util.concurrent.TimeUnit;
+
+import javax.inject.Inject;
 
 import io.reactivex.Observable;
 import io.reactivex.Observer;
@@ -30,12 +34,22 @@ public class MainActivity extends AppCompatActivity {
     private Disposable originLocationSubscription;
     private Disposable destinationLocationSubscription;
 
-    private IGoogleAutoPlaceCompleteApi googleAutoPlaceCompleteApi;
-    private IGoogleGeoCodingApi googleGeoCodingApi;
-    private IBingTrafficDataApi bingeTrafficApi;
+    @Inject
+    IGoogleAutoPlaceCompleteApi googleAutoPlaceCompleteApi;
 
-    private LocationAddress sourceAddress;
-    private LocationAddress destinationAddress;
+    @Inject
+    IGoogleGeoCodingApi googleGeoCodingApi;
+
+    @Inject
+    IBingTrafficDataApi bingeTrafficApi;
+
+    @Inject
+    @SourceLatLong
+    LocationAddress sourceLatLong;
+
+    @Inject
+    @DestLatLong
+    LocationAddress destinationLatLong;
 
     private Button getTrafficInfoButton;
 
@@ -43,10 +57,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        googleAutoPlaceCompleteApi = ((TrafficIndicentsApplication) getApplication()).getGooglePlacesAutoCompleteApi();
-        googleGeoCodingApi = ((TrafficIndicentsApplication) getApplication()).getGeoCodingApi();
-        bingeTrafficApi = ((TrafficIndicentsApplication) getApplication()).getBingTrafficDataApi();
+        ((TrafficIncidentsApp) getApplication()).getAppComponent().inject(this);
 
         AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.source_location);
         AutoCompleteTextView destination = (AutoCompleteTextView) findViewById(R.id.destination_location);
@@ -69,8 +80,8 @@ public class MainActivity extends AppCompatActivity {
                             .subscribe(geoCodingData -> {
                                 if (geoCodingData.getGeoCodeResultsDatas().size() >= 1) {
                                     GeoCodeLatLong geometryData = geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong();
-                                    sourceAddress = new LocationAddress(geometryData.getLatitude(), geometryData.getLongitude());
-                                    Log.e("findMe", "sourceAddress: lat: " + sourceAddress.getLatitude() + " long: " + sourceAddress.getLongitude());
+                                    sourceLatLong.setLatAndLong(geometryData.getLatitude(), geometryData.getLongitude());
+                                    Log.e("findMe", "sourceAddress: lat: " + sourceLatLong.getLatitude() + " long: " + sourceLatLong.getLongitude());
                                 }
                             }, throwable -> Log.e("findMe", "exception while fetching results: " + throwable.getCause()));
                 });
@@ -89,8 +100,8 @@ public class MainActivity extends AppCompatActivity {
                             .subscribe(geoCodingData -> {
                                 if (geoCodingData.getGeoCodeResultsDatas().size() >= 1) {
                                     GeoCodeLatLong geometryData = geoCodingData.getGeoCodeResultsDatas().get(0).getGeoCodeGeometryData().getGeoCodeLatLong();
-                                    destinationAddress = new LocationAddress(geometryData.getLatitude(), geometryData.getLongitude());
-                                    Log.e("findMe", "destinationAddress: lat: " + destinationAddress.getLatitude() + " long: " + destinationAddress.getLongitude());
+                                    destinationLatLong.setLatAndLong(geometryData.getLatitude(), geometryData.getLongitude());
+                                    Log.e("findMe", "destinationAddress: lat: " + destinationLatLong.getLatitude() + " long: " + destinationLatLong.getLongitude());
                                 }
                             }, throwable -> Log.e("findMe", "exception while fetching results: " + throwable.getCause()));
                 });
@@ -102,14 +113,14 @@ public class MainActivity extends AppCompatActivity {
                 .throttleFirst(5, TimeUnit.SECONDS) //throttleFirst just stops further events for next 5 seconds so if user clicks the button multiple times,
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(aVoid -> {
-                    bingeTrafficApi.getTrafficData(ApiUtils.getFormattedLatLongForTrafficDetailsApi(sourceAddress, destinationAddress))
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(AndroidSchedulers.mainThread())
-                    .subscribe(trafficData -> {
-                        Log.e("findMe", "trafficData = " + trafficData.getResourceSetses().get(0).getResources().get(0).getDescription());
-                    }, throwable -> {
-                        Log.e("findMe", "error = " + throwable.getMessage());
-                    });
+                    bingeTrafficApi.getTrafficData(ApiUtils.getFormattedLatLongForTrafficDetailsApi(sourceLatLong, destinationLatLong))
+                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread())
+                            .subscribe(trafficData -> {
+                                Log.e("findMe", "trafficData = " + trafficData.getResourceSetses().get(0).getResources().get(0).getDescription());
+                            }, throwable -> {
+                                Log.e("findMe", "error = " + throwable.getMessage());
+                            });
                 });
 
     }

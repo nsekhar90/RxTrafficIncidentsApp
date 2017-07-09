@@ -10,6 +10,7 @@ android {
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
+        multiDexEnabled = true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -25,6 +26,9 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+    lintOptions {
+        abortOnError false
     }
 }
 
@@ -58,7 +62,6 @@ dependencies {
     compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
     compile 'io.reactivex.rxjava2:rxjava:2.1.0'
 
-
     //GooglePlayServices
     compile 'com.google.android.gms:play-services:11.0.2'
 
@@ -71,8 +74,12 @@ dependencies {
     compile 'com.squareup.retrofit2:retrofit:2.1.0'
     compile 'com.squareup.retrofit2:converter-gson:2.1.0'
     compile 'com.squareup.okhttp3:logging-interceptor:3.3.0'
-
     compile 'com.squareup.retrofit2:adapter-rxjava2:2.2.0'
+
+    //Dagger
+    compile 'com.google.dagger:dagger:2.10'
+    annotationProcessor 'com.google.dagger:dagger-compiler:2.10'
+    annotationProcessor 'com.google.guava:guava:21.0'
 
     testCompile 'junit:junit:4.12'
 }

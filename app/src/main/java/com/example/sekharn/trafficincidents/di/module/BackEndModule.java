@@ -1,11 +1,17 @@
-package com.example.sekharn.trafficincidents;
+package com.example.sekharn.trafficincidents.di.module;
 
-import android.app.Application;
+import android.content.Context;
 
+import com.example.sekharn.trafficincidents.R;
+import com.example.sekharn.trafficincidents.di.annotation.ForApplication;
 import com.example.sekharn.trafficincidents.network.api.IBingTrafficDataApi;
 import com.example.sekharn.trafficincidents.network.api.IGoogleAutoPlaceCompleteApi;
 import com.example.sekharn.trafficincidents.network.api.IGoogleGeoCodingApi;
 
+import javax.inject.Singleton;
+
+import dagger.Module;
+import dagger.Provides;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -13,25 +19,12 @@ import retrofit2.Retrofit;
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class TrafficIndicentsApplication extends Application {
+@Module
+public class BackEndModule {
 
-    private IGoogleAutoPlaceCompleteApi googlePlacesAutoComplete;
-    private IGoogleGeoCodingApi geoCodingApi;
-    private IBingTrafficDataApi bingTrafficDataApi;
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        buildNecessaryComponents();
-    }
-
-    private void buildNecessaryComponents() {
-        buildRetrofitForGooglePlacesAutoComplete();
-        buildRetrofitForGoogleGeoCoding();
-        buildRetrofitForBingTrafficDataApi();
-    }
-
-    private void buildRetrofitForGoogleGeoCoding() {
+    @Provides
+    @Singleton
+    IGoogleGeoCodingApi provideGeoCodingApi(@ForApplication Context context) {
         OkHttpClient.Builder httpClient =
                 new OkHttpClient.Builder();
         httpClient.addInterceptor(chain -> {
@@ -39,7 +32,7 @@ public class TrafficIndicentsApplication extends Application {
             HttpUrl originalHttpUrl = original.url();
 
             HttpUrl url = originalHttpUrl.newBuilder()
-                    .addQueryParameter("key", getString(R.string.google_maps_geocoding_key))
+                    .addQueryParameter("key", context.getString(R.string.google_maps_geocoding_key))
                     .build();
 
             Request.Builder requestBuilder = original.newBuilder()
@@ -51,14 +44,16 @@ public class TrafficIndicentsApplication extends Application {
 
         Retrofit retrofit = new Retrofit.Builder()
                 .client(httpClient.build())
-                .baseUrl(getString(R.string.google_maps_geocoding_base_url))
+                .baseUrl(context.getString(R.string.google_maps_geocoding_base_url))
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
-        geoCodingApi = retrofit.create(IGoogleGeoCodingApi.class);
+        return retrofit.create(IGoogleGeoCodingApi.class);
     }
 
-    private void buildRetrofitForGooglePlacesAutoComplete() {
+    @Provides
+    @Singleton
+    IGoogleAutoPlaceCompleteApi provideAutoPlaceCompleteApi(@ForApplication Context context) {
         OkHttpClient.Builder httpClient =
                 new OkHttpClient.Builder();
         httpClient.addInterceptor(chain -> {
@@ -66,7 +61,7 @@ public class TrafficIndicentsApplication extends Application {
             HttpUrl originalHttpUrl = original.url();
 
             HttpUrl url = originalHttpUrl.newBuilder()
-                    .addQueryParameter("key", getString(R.string.google_maps_places_autocomplete_key))
+                    .addQueryParameter("key", context.getString(R.string.google_maps_places_autocomplete_key))
                     .build();
 
             Request.Builder requestBuilder = original.newBuilder()
@@ -78,14 +73,16 @@ public class TrafficIndicentsApplication extends Application {
 
         Retrofit retrofit = new Retrofit.Builder()
                 .client(httpClient.build())
-                .baseUrl(getString(R.string.google_maps_autocomplete_base_url))
+                .baseUrl(context.getString(R.string.google_maps_autocomplete_base_url))
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
-        googlePlacesAutoComplete = retrofit.create(IGoogleAutoPlaceCompleteApi.class);
+        return retrofit.create(IGoogleAutoPlaceCompleteApi.class);
     }
 
-    private void buildRetrofitForBingTrafficDataApi() {
+    @Provides
+    @Singleton
+    IBingTrafficDataApi provideTrafficDataApi(@ForApplication Context context) {
         OkHttpClient.Builder httpClient =
                 new OkHttpClient.Builder();
         httpClient.addInterceptor(chain -> {
@@ -93,7 +90,7 @@ public class TrafficIndicentsApplication extends Application {
             HttpUrl originalHttpUrl = original.url();
 
             HttpUrl url = originalHttpUrl.newBuilder()
-                    .addQueryParameter("key", getString(R.string.binge_key))
+                    .addQueryParameter("key", context.getString(R.string.binge_key))
                     .build();
 
             Request.Builder requestBuilder = original.newBuilder()
@@ -105,22 +102,10 @@ public class TrafficIndicentsApplication extends Application {
 
         Retrofit retrofit = new Retrofit.Builder()
                 .client(httpClient.build())
-                .baseUrl(getString(R.string.bing_traffic_data_base_url))
+                .baseUrl(context.getString(R.string.bing_traffic_data_base_url))
                 .addConverterFactory(GsonConverterFactory.create())
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
-        bingTrafficDataApi = retrofit.create(IBingTrafficDataApi.class);
-    }
-
-    public IGoogleAutoPlaceCompleteApi getGooglePlacesAutoCompleteApi() {
-        return googlePlacesAutoComplete;
-    }
-
-    public IGoogleGeoCodingApi getGeoCodingApi() {
-        return geoCodingApi;
-    }
-
-    public IBingTrafficDataApi getBingTrafficDataApi() {
-        return bingTrafficDataApi;
+        return retrofit.create(IBingTrafficDataApi.class);
     }
 }
