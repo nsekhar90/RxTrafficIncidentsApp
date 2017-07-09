@@ -13,6 +13,8 @@ import com.example.sekharn.trafficincidents.network.api.IBingTrafficDataApi;
 import com.example.sekharn.trafficincidents.network.api.IGoogleAutoPlaceCompleteApi;
 import com.example.sekharn.trafficincidents.network.api.IGoogleGeoCodingApi;
 import com.example.sekharn.trafficincidents.network.data.geocode.GeoCodeLatLong;
+import com.example.sekharn.trafficincidents.util.ApiUtils;
+import com.jakewharton.rxbinding2.view.RxView;
 import com.jakewharton.rxbinding2.widget.RxTextView;
 
 import java.util.concurrent.TimeUnit;
@@ -96,21 +98,19 @@ public class MainActivity extends AppCompatActivity {
         setUpTimer();
         setUpButtonEnableLogic(sourceLocationObservable, destinationLocationObservable);
 
-//        RxView.clicks(getTrafficInfoButton)
-////                .skip(4)
-//                .throttleFirst(5, TimeUnit.MILLISECONDS) //throttleFirst just stops further events for next 5 seconds so if user clicks the button multiple times,
-//                .flatMap(new Function<Object, ObservableSource<TrafficData>>() {
-//                    @Override
-//                    public ObservableSource<TrafficData> apply(@NonNull Object o) throws Exception {
-//                        return bingeTrafficApi.getTrafficData("37.354107,-121.95524,37.354107,-121.95524");
-//                    }
-//                }).subscribeOn(Schedulers.io())
-//                .observeOn(AndroidSchedulers.mainThread())
-//                .subscribe(trafficData -> {
-//                   Log.e("findMe", "trafficData = " + trafficData.getAuthenticationResultCode());
-//                }, throwable -> {
-//                    Log.e("findMe", "trafficData error= " + throwable.getStackTrace().toString());
-//                });
+        RxView.clicks(getTrafficInfoButton)
+                .throttleFirst(5, TimeUnit.SECONDS) //throttleFirst just stops further events for next 5 seconds so if user clicks the button multiple times,
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(aVoid -> {
+                    bingeTrafficApi.getTrafficData(ApiUtils.getFormattedLatLongForTrafficDetailsApi(sourceAddress, destinationAddress))
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(trafficData -> {
+                        Log.e("findMe", "trafficData = " + trafficData.getResourceSetses().get(0).getResources().get(0).getDescription());
+                    }, throwable -> {
+                        Log.e("findMe", "error = " + throwable.getMessage());
+                    });
+                });
 
     }
 

@@ -9,5 +9,5 @@
     <!--  Base URLS of APIS -->
     <string name="google_maps_autocomplete_base_url">https://maps.googleapis.com/maps/api/place/autocomplete/</string>
     <string name="google_maps_geocoding_base_url">https://maps.googleapis.com/maps/api/geocode/</string>
-    <string name="bing_traffic_data_base_url">http://dev.virtualearth.net/REST/v1/Traffic/Incidents/</string>
+    <string name="bing_traffic_data_base_url">https://dev.virtualearth.net/REST/v1/Traffic/Incidents/</string>
 </resources>
