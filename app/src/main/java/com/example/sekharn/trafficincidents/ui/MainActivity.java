@@ -105,7 +105,10 @@ public class MainActivity extends AppCompatActivity {
                             .subscribe(autoCompletePredictionData -> {
                                 sourceAddressAdapter = new AutoCompleteSuggestionsAdapter(this, R.layout.row_auto_complete_place_suggestion_item, autoCompletePredictionData.getPredictionDataList());
                                 source.setAdapter(sourceAddressAdapter);
-                            }, Throwable::printStackTrace);
+                            },
+                            throwable -> {
+                                throwable.printStackTrace();
+                            });
                 });
         mainActivityCompositeDisposable.add(sourceLocationDisposable);
 
