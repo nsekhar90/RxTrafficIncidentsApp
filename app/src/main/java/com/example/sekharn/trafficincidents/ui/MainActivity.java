@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
     private TrafficDataAdapter trafficDataAdapter;
     private RecyclerView trafficDataView;
 
-    private Button getTrafficInfoButton;
+    private Button trafficInfoButton;
     private ArrayList<Resources> trafficDataList;
 
     @Override
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
         AutoCompleteTextView source = (AutoCompleteTextView) findViewById(R.id.source_location);
         AutoCompleteTextView destination = (AutoCompleteTextView) findViewById(R.id.destination_location);
-        getTrafficInfoButton = (Button) findViewById(R.id.my_button);
+        trafficInfoButton = (Button) findViewById(R.id.my_button);
         trafficDataView = (RecyclerView) findViewById(R.id.traffic_data_view);
 
         trafficDataList = new ArrayList<>();
@@ -100,8 +100,8 @@ public class MainActivity extends AppCompatActivity {
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .subscribe(charSequence -> {
                     googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribeOn(Schedulers.io())
+                            .observeOn(AndroidSchedulers.mainThread()) //get notified on main thread
+                            .subscribeOn(Schedulers.io()) // get data on IO thread
                             .subscribe(autoCompletePredictionData -> {
                                 sourceAddressAdapter = new AutoCompleteSuggestionsAdapter(this, R.layout.row_auto_complete_place_suggestion_item, autoCompletePredictionData.getPredictionDataList());
                                 source.setAdapter(sourceAddressAdapter);
@@ -137,7 +137,7 @@ public class MainActivity extends AppCompatActivity {
         setUpTimer();
         setUpButtonEnableLogic(sourceLocationObservable, destinationLocationObservable);
 
-        RxView.clicks(getTrafficInfoButton)
+        RxView.clicks(trafficInfoButton)
                 .throttleFirst(5, TimeUnit.SECONDS) //throttleFirst just stops further events for next 5 seconds so if user clicks the button multiple times,
                 .subscribe(aVoid -> {
                     Single<GeoCodingData> geoCodingSourceObservable = googleGeoCodingApi.getLatLong(sourceLatLong.getAddress());
@@ -170,12 +170,13 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
+    /** Enable Button Logic using combineLatest Operator **/
     private void setUpButtonEnableLogic(Observable<CharSequence> sourceLocationObservable, Observable<CharSequence> destinationLocationObservable) {
         Observable.combineLatest(sourceLocationObservable, destinationLocationObservable, (charSequence, charSequence2) -> {
             boolean sourceCheck = charSequence.toString().length() >= 5;
             boolean destinationCheck = charSequence2.toString().length() >= 5;
             return sourceCheck && destinationCheck;
-        }).subscribe(getTrafficInfoButton::setEnabled); //same as getTrafficInfoButton.setEnabled(boolean)
+        }).subscribe(trafficInfoButton::setEnabled); //same as trafficInfoButton.setEnabled(boolean)
     }
 
     @Override
