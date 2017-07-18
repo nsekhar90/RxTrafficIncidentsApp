@@ -100,8 +100,8 @@ public class MainActivity extends AppCompatActivity {
                 .debounce(500, TimeUnit.MILLISECONDS)
                 .subscribe(charSequence -> {
                     googleAutoPlaceCompleteApi.getQueryResults(charSequence.toString())
-                            .observeOn(AndroidSchedulers.mainThread()) //get notified on main thread
                             .subscribeOn(Schedulers.io()) // get data on IO thread
+                            .observeOn(AndroidSchedulers.mainThread()) //get notified on main thread
                             .subscribe(autoCompletePredictionData -> {
                                 sourceAddressAdapter = new AutoCompleteSuggestionsAdapter(this, R.layout.row_auto_complete_place_suggestion_item, autoCompletePredictionData.getPredictionDataList());
                                 source.setAdapter(sourceAddressAdapter);
@@ -111,14 +111,6 @@ public class MainActivity extends AppCompatActivity {
                             });
                 });
         mainActivityCompositeDisposable.add(sourceLocationDisposable);
-
-        RxAutoCompleteTextView.itemClickEvents(source).subscribe(adapterViewItemClickEvent -> {
-            sourceLatLong.setAddress(sourceAddressAdapter.getItem(adapterViewItemClickEvent.position()).getDescription());
-        });
-
-        RxAutoCompleteTextView.itemClickEvents(destination).subscribe(adapterViewItemClickEvent -> {
-            destinationLatLong.setAddress(destinationAddressAdapter.getItem(adapterViewItemClickEvent.position()).getDescription());
-        });
 
          /*code to get lat, long of destination address */
         destinationLocationDisposable = destinationLocationObservable
@@ -134,10 +126,17 @@ public class MainActivity extends AppCompatActivity {
                 });
         mainActivityCompositeDisposable.add(destinationLocationDisposable);
 
-        setUpTimer();
+        RxAutoCompleteTextView.itemClickEvents(source).subscribe(adapterViewItemClickEvent -> {
+            sourceLatLong.setAddress(sourceAddressAdapter.getItem(adapterViewItemClickEvent.position()).getDescription());
+        });
+
+        RxAutoCompleteTextView.itemClickEvents(destination).subscribe(adapterViewItemClickEvent -> {
+            destinationLatLong.setAddress(destinationAddressAdapter.getItem(adapterViewItemClickEvent.position()).getDescription());
+        });
+
         setUpButtonEnableLogic(sourceLocationObservable, destinationLocationObservable);
 
-        RxView.clicks(trafficInfoButton)
+        getButtonObservable()
                 .throttleFirst(5, TimeUnit.SECONDS) //throttleFirst just stops further events for next 5 seconds so if user clicks the button multiple times,
                 .subscribe(aVoid -> {
                     Single<GeoCodingData> geoCodingSourceObservable = googleGeoCodingApi.getLatLong(sourceLatLong.getAddress());
@@ -166,8 +165,11 @@ public class MainActivity extends AppCompatActivity {
                                 trafficDataView.setLayoutManager(layoutManager);
                                 trafficDataView.setItemAnimator(new DefaultItemAnimator());
                                 trafficDataView.setAdapter(trafficDataAdapter);
-                            }, Throwable::printStackTrace);
+                            }, throwable -> {throwable.printStackTrace();});
                 });
+
+        //Timer example
+        setUpTimer();
     }
 
     /** Enable Button Logic using combineLatest Operator **/
@@ -212,5 +214,9 @@ public class MainActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private Observable<Object> getButtonObservable() {
+        return RxView.clicks(trafficInfoButton);
     }
 }
