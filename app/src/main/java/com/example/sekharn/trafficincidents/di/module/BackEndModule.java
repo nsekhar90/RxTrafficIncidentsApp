@@ -24,9 +24,9 @@ public class BackEndModule {
 
     @Provides
     @Singleton
-    IGoogleGeoCodingApi provideGeoCodingApi(@ForApplication Context context) {
+    IGoogleGeoCodingApi provideGeoCodingApi(@ForApplication Context context, OkHttpClient okhttpClient, GsonConverterFactory gsonConverterFactory) {
         OkHttpClient.Builder httpClient =
-                new OkHttpClient.Builder();
+                okhttpClient.newBuilder();
         httpClient.addInterceptor(chain -> {
             Request original = chain.request();
             HttpUrl originalHttpUrl = original.url();
@@ -45,7 +45,7 @@ public class BackEndModule {
         Retrofit retrofit = new Retrofit.Builder()
                 .client(httpClient.build())
                 .baseUrl(context.getString(R.string.google_maps_geocoding_base_url))
-                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(gsonConverterFactory)
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
         return retrofit.create(IGoogleGeoCodingApi.class);
@@ -53,9 +53,9 @@ public class BackEndModule {
 
     @Provides
     @Singleton
-    IGoogleAutoPlaceCompleteApi provideAutoPlaceCompleteApi(@ForApplication Context context) {
+    IGoogleAutoPlaceCompleteApi provideAutoPlaceCompleteApi(@ForApplication Context context, OkHttpClient okhttpClient, GsonConverterFactory gsonConverterFactory) {
         OkHttpClient.Builder httpClient =
-                new OkHttpClient.Builder();
+                okhttpClient.newBuilder();
         httpClient.addInterceptor(chain -> {
             Request original = chain.request();
             HttpUrl originalHttpUrl = original.url();
@@ -74,7 +74,7 @@ public class BackEndModule {
         Retrofit retrofit = new Retrofit.Builder()
                 .client(httpClient.build())
                 .baseUrl(context.getString(R.string.google_maps_autocomplete_base_url))
-                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(gsonConverterFactory)
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
         return retrofit.create(IGoogleAutoPlaceCompleteApi.class);
@@ -82,9 +82,8 @@ public class BackEndModule {
 
     @Provides
     @Singleton
-    IBingTrafficDataApi provideTrafficDataApi(@ForApplication Context context) {
-        OkHttpClient.Builder httpClient =
-                new OkHttpClient.Builder();
+    IBingTrafficDataApi provideTrafficDataApi(@ForApplication Context context, OkHttpClient okhttpClient, GsonConverterFactory gsonConverterFactory) {
+        OkHttpClient.Builder httpClient = okhttpClient.newBuilder();
         httpClient.addInterceptor(chain -> {
             Request original = chain.request();
             HttpUrl originalHttpUrl = original.url();
@@ -103,9 +102,21 @@ public class BackEndModule {
         Retrofit retrofit = new Retrofit.Builder()
                 .client(httpClient.build())
                 .baseUrl(context.getString(R.string.bing_traffic_data_base_url))
-                .addConverterFactory(GsonConverterFactory.create())
+                .addConverterFactory(gsonConverterFactory)
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .build();
         return retrofit.create(IBingTrafficDataApi.class);
+    }
+
+    @Provides
+    @Singleton
+    OkHttpClient provideOkHttpClient() {
+        return new OkHttpClient();
+    }
+
+    @Provides
+    @Singleton
+    GsonConverterFactory provideGsonConverterFactory() {
+        return GsonConverterFactory.create();
     }
 }

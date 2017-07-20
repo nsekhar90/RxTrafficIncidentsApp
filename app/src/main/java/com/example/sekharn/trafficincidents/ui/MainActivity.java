@@ -31,6 +31,7 @@ import com.jakewharton.rxbinding2.widget.RxAutoCompleteTextView;
 import com.jakewharton.rxbinding2.widget.RxTextView;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 import javax.inject.Inject;
@@ -218,5 +219,58 @@ public class MainActivity extends AppCompatActivity {
 
     private Observable<Object> getButtonObservable() {
         return RxView.clicks(trafficInfoButton);
+    }
+
+    class Node {
+
+        private int data;
+        private Node next;
+
+        public Node(int data) {
+            this.data = data;
+        }
+
+        public void appendToTail(int data) {
+            Node endNode = new Node(data);
+            Node currentNode = this;
+            while (currentNode.next != null) {
+                currentNode = currentNode.next;
+            }
+            currentNode.next = endNode;
+        }
+
+        public Node deleteNode(Node head, int data) {
+            Node node = head;
+            if (node.data == data) {
+                 return node.next = head; //moved head
+            }
+
+            while (node.next != null) {
+                if (node.next.data == data) {
+                    node.next = node.next.next;
+                    return head;
+                }
+                node = node.next;
+            }
+            return head;
+        }
+
+        //delete dups
+        public void deleteDups(Node node) {
+            HashMap<Integer, Boolean> hashMap = new HashMap<>();
+            Node previousNode = null;
+
+            while (node != null) {
+                if (hashMap.containsKey(node.data)) {
+                    previousNode.next = node.next;
+                } else {
+                    hashMap.put(node.data, true);
+                    previousNode = node;
+                }
+
+            }
+            node = node.next;
+
+        }
     }
 }
