@@ -2,11 +2,15 @@ package com.example.sekharn.trafficincidents.di.module;
 
 import android.content.Context;
 
+import com.example.sekharn.trafficincidents.MainPresenter;
 import com.example.sekharn.trafficincidents.TrafficIncidentsApp;
 import com.example.sekharn.trafficincidents.di.annotation.DestLatLong;
 import com.example.sekharn.trafficincidents.di.annotation.ForApplication;
 import com.example.sekharn.trafficincidents.di.annotation.SourceLatLong;
 import com.example.sekharn.trafficincidents.model.LocationAddress;
+import com.example.sekharn.trafficincidents.network.api.IBingTrafficDataApi;
+import com.example.sekharn.trafficincidents.network.api.IGoogleAutoPlaceCompleteApi;
+import com.example.sekharn.trafficincidents.network.api.IGoogleGeoCodingApi;
 
 import javax.inject.Singleton;
 
@@ -41,5 +45,14 @@ public class AppModule {
     @DestLatLong
     LocationAddress provideDestinationLocationAddress() {
         return new LocationAddress();
+    }
+
+    @Provides
+    @Singleton
+    MainPresenter provideMainPresenter(IGoogleAutoPlaceCompleteApi googleAutoPlaceCompleteApi, @SourceLatLong LocationAddress sourceLocationAddress,
+                                       @DestLatLong LocationAddress destinationLocationAddress, IGoogleGeoCodingApi googleGeoCodingApi,
+                                       IBingTrafficDataApi bingTrafficDataApi) {
+        return new MainPresenter(googleAutoPlaceCompleteApi, sourceLocationAddress,
+                destinationLocationAddress, googleGeoCodingApi, bingTrafficDataApi);
     }
 }

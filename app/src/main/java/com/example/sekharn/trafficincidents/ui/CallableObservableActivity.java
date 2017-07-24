@@ -13,9 +13,12 @@ import android.widget.TextView;
 import com.example.sekharn.trafficincidents.R;
 import com.example.sekharn.trafficincidents.util.Database;
 
+import java.util.concurrent.TimeUnit;
+
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.schedulers.Schedulers;
+import timber.log.Timber;
 
 public class CallableObservableActivity extends AppCompatActivity {
 
@@ -57,6 +60,14 @@ public class CallableObservableActivity extends AppCompatActivity {
         });
     }
 
+
+    private void setUpTimer() {
+        Observable<Long> timerObservable = Observable.interval(500, 400, TimeUnit.MILLISECONDS)
+                .take(10) //Do 10 times and automatically stop
+                .map(aLong -> aLong * aLong);
+
+        timerObservable.subscribe(aLong -> Timber.e("onNext of timer: " + aLong));
+    }
     private void showProgress() {
         progressBar.setVisibility(View.VISIBLE);
     }
