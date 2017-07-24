@@ -1,4 +1,4 @@
-package com.example.sekharn.trafficincidents.contracts;
+package com.example.sekharn.trafficincidents.contract;
 
 import com.example.sekharn.trafficincidents.network.data.autocomplete.AutoCompletePredictionData;
 import com.example.sekharn.trafficincidents.network.data.bingetraffic.TrafficData;

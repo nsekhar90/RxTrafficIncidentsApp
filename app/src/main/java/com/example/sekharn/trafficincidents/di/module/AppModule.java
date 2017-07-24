@@ -2,7 +2,7 @@ package com.example.sekharn.trafficincidents.di.module;
 
 import android.content.Context;
 
-import com.example.sekharn.trafficincidents.MainPresenter;
+import com.example.sekharn.trafficincidents.presenter.MainPresenter;
 import com.example.sekharn.trafficincidents.TrafficIncidentsApp;
 import com.example.sekharn.trafficincidents.di.annotation.DestLatLong;
 import com.example.sekharn.trafficincidents.di.annotation.ForApplication;

@@ -1,6 +1,6 @@
-package com.example.sekharn.trafficincidents;
+package com.example.sekharn.trafficincidents.presenter;
 
-import com.example.sekharn.trafficincidents.contracts.MainActivityContract;
+import com.example.sekharn.trafficincidents.contract.MainActivityContract;
 import com.example.sekharn.trafficincidents.model.LocationAddress;
 import com.example.sekharn.trafficincidents.network.api.IBingTrafficDataApi;
 import com.example.sekharn.trafficincidents.network.api.IGoogleAutoPlaceCompleteApi;

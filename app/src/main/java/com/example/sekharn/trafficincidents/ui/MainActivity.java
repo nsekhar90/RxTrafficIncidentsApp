@@ -8,12 +8,12 @@ import android.support.v7.widget.RecyclerView;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 
-import com.example.sekharn.trafficincidents.MainPresenter;
+import com.example.sekharn.trafficincidents.presenter.MainPresenter;
 import com.example.sekharn.trafficincidents.R;
 import com.example.sekharn.trafficincidents.TrafficIncidentsApp;
-import com.example.sekharn.trafficincidents.adapters.AutoCompleteSuggestionsAdapter;
-import com.example.sekharn.trafficincidents.adapters.TrafficDataAdapter;
-import com.example.sekharn.trafficincidents.contracts.MainActivityContract;
+import com.example.sekharn.trafficincidents.adapter.AutoCompleteSuggestionsAdapter;
+import com.example.sekharn.trafficincidents.adapter.TrafficDataAdapter;
+import com.example.sekharn.trafficincidents.contract.MainActivityContract;
 import com.example.sekharn.trafficincidents.network.data.autocomplete.AutoCompletePredictionData;
 import com.example.sekharn.trafficincidents.network.data.bingetraffic.Resources;
 import com.example.sekharn.trafficincidents.network.data.bingetraffic.TrafficData;

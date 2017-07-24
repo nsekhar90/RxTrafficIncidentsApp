@@ -1,4 +1,4 @@
-package com.example.sekharn.trafficincidents.adapters;
+package com.example.sekharn.trafficincidents.adapter;
 
 import android.content.Context;
 import android.support.annotation.LayoutRes;
