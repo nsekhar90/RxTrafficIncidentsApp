@@ -1,4 +1,4 @@
-package com.example.sekharn.trafficincidents.adapters;
+package com.example.sekharn.trafficincidents.adapter;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
