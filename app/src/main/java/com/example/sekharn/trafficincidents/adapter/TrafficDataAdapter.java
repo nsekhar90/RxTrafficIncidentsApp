@@ -15,16 +15,16 @@ public class TrafficDataAdapter extends RecyclerView.Adapter<TrafficDataAdapter.
 
     private List<Resources> trafficIncidents;
 
-    private int mRowLayout;
+    private int rowLayout;
 
     public TrafficDataAdapter(List<Resources> trafficIncidents, int rowLayout) {
         this.trafficIncidents = trafficIncidents;
-        mRowLayout = rowLayout;
+        this.rowLayout = rowLayout;
     }
 
     @Override
     public MyViewHolder onCreateViewHolder(final ViewGroup viewGroup, int i) {
-        TrafficDataViewBinding binding = DataBindingUtil.inflate(LayoutInflater.from(viewGroup.getContext()), mRowLayout, viewGroup, false);
+        TrafficDataViewBinding binding = DataBindingUtil.inflate(LayoutInflater.from(viewGroup.getContext()), rowLayout, viewGroup, false);
         return new MyViewHolder(binding.getRoot());
     }
 
