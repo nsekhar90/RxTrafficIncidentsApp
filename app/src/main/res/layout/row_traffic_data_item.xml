@@ -1,35 +1,48 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:orientation="vertical">
+<layout xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <TextView
-        android:id="@+id/description"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
-        android:gravity="center_vertical"
-        android:padding="10dp"
-        android:text="description"
-        android:textSize="24sp" />
+    <data class="TrafficDataViewBinding">
 
-    <TextView
-        android:id="@+id/verified"
+        <import type="com.example.sekharn.trafficincidents.network.data.bingetraffic.Resources" />
+
+        <variable
+            name="trafficModel"
+            type="com.example.sekharn.trafficincidents.network.data.bingetraffic.Resources" />
+    </data>
+
+    <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/description"
-        android:layout_marginTop="4dp"
-        android:clickable="false"
-        android:padding="10dp"
-        android:text="verified"
-        android:textSize="17sp"
-        android:transitionName="appIcon" />
+        android:orientation="vertical">
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0.4dp"
-        android:layout_below="@id/verified"
-        android:background="@color/colorAccent" />
+        <TextView
+            android:id="@+id/description"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:gravity="center_vertical"
+            android:padding="10dp"
+            android:text="@{trafficModel.description}"
+            android:textSize="24sp" />
 
-</RelativeLayout>
+        <TextView
+            android:id="@+id/verified"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/description"
+            android:layout_marginTop="4dp"
+            android:clickable="false"
+            android:hint="@string/app_name"
+            android:padding="10dp"
+            android:text="@{trafficModel.verified ? @string/true_string : @string/false_string}"
+            android:textSize="17sp"
+            android:transitionName="appIcon" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="0.4dp"
+            android:layout_below="@id/verified"
+            android:background="@color/colorAccent" />
+
+    </RelativeLayout>
+</layout>
